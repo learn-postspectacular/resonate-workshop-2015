@@ -1,12 +1,6 @@
 (ns resonate2015.day1.ecs
   (:require
-    [clojure.set :as set]
-    [thi.ng.geom.core :as g]
-     [thi.ng.geom.core.vector :as v]
-     [thi.ng.geom.aabb :as a]
-     [thi.ng.geom.circle :as c]
-     [thi.ng.geom.types.utils.ptf :as ptf]
-     [thi.ng.common.math.core :as m :refer [THIRD_PI TWO_PI]]))
+    [clojure.set :as set]))
 
 (require '[thi.ng.geom.mesh.io :as mio])
 (require '[clojure.java.io :as io])
