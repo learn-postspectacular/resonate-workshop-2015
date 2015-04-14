@@ -35,23 +35,32 @@
   [app-state entity-id name state]
   (assoc-in app-state [:entities entity-id name] state))
 
-(defn add-components-for-eid
+(defn update-entity
   "Updates a app state map with new entity states."
   [app-state entity-id states]
-  (update-in app-state [:entities entity-id]
-         merge states))
+    (update-in app-state [:entities entity-id]
+           merge states))
 
-(defn add-components-for-eid!
+(defn create-entity
+  [app-state states]
+  (let [eid (inc (:uuid-counter app-state))]
+    (-> app-state
+        (assoc :uuid-counter eid)
+        (update-entity eid states))))
+
+(defn update-entity!
   "Swaps a app state atom with new entity states."
-  ([app-state entity-id states]
+  [app-state entity-id states]
    (swap! app-state
           update-in [:entities entity-id]
           merge states))
-  ([app-state states]
-    (add-components-for-eid!
-      app-state
-      (new-entity! app-state)
-      states)))
+  
+(defn create-entity!
+  [app-state states]
+  (update-entity!
+    app-state
+    (new-entity! app-state)
+    states))
 
 (defn new-system!
   "Defines a new system in the given app-state atom.
