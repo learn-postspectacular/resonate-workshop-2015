@@ -21,6 +21,13 @@
          :entities     {} 
          :systems      {}}))
 
+(defn new-entity!
+  "Defines a new entity ID"
+  [app-state]
+  (-> app-state
+      (swap! update-in [:uuid-counter] inc)
+      (:uuid-counter)))
+
 (defn component
   "Defines a new component"
   [app-state entity-id name state]
@@ -34,18 +41,15 @@
 
 (defn add-components-for-eid!
   "Swaps a app state atom with new entity states."
-  [app-state entity-id states]
-  (swap! app-state
-         update-in [:entities entity-id]
-         merge states))
-
-
-(defn new-entity!
-  "Defines a new entity ID"
-  [app-state]
-  (-> app-state
-      (swap! update-in [:uuid-counter] inc)
-      (:uuid-counter)))
+  ([app-state entity-id states]
+   (swap! app-state
+          update-in [:entities entity-id]
+          merge states))
+  ([app-state states]
+    (add-components-for-eid!
+      app-state
+      (new-entity! app-state)
+      states)))
 
 (defn system
   "Defines a new system"
