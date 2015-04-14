@@ -1,11 +1,22 @@
-(ns resonate2015.day1.ecs)
+(ns resonate2015.day1.ecs
+  (:require
+    [clojure.set :as set]
+    [thi.ng.geom.core :as g]
+     [thi.ng.geom.core.vector :as v]
+     [thi.ng.geom.aabb :as a]
+     [thi.ng.geom.circle :as c]
+     [thi.ng.geom.types.utils.ptf :as ptf]
+     [thi.ng.common.math.core :as m :refer [THIRD_PI TWO_PI]]))
+
+(require '[thi.ng.geom.mesh.io :as mio])
+(require '[clojure.java.io :as io])
 
 ;; (component :position {:x 0 :y 10})
 
 ;; 1 [pos col vel renderable] ;; player
 ;; 2 [skill pos vel]
 
-;; 1 {:pos {:x 1 :y 0} :color :red :renderable true}
+;; 1 {:pos [0 0] :vel [1 -1] :color :red :renderable true}
 ;; 2 {:pos {:x ...} :vel {....}
 
 ;; color
@@ -17,9 +28,10 @@
 
 (defn make-app
   []
-  (atom {:uuid-counter 0
-         :entities     {} 
-         :systems      {}}))
+  (atom
+    {:uuid-counter 0
+     :entities     {} 
+     :systems      {}}))
 
 (defn new-entity!
   "Defines a new entity ID"
@@ -72,26 +84,15 @@
   [app-state name]
   (let [{:keys [entities systems]} (deref app-state)
         {sys-fn :fn comp-ids :comp-ids} (systems name)        
-        valid-entity? (make-entity-validator comp-ids)        
+        valid-entity?     (make-entity-validator comp-ids)        
         matching-entities (filter valid-entity? entities)]
      (dorun
        (map
          (fn [[eid estate]] (sys-fn app-state eid estate))
          matching-entities))))
 
-
-(let (a "hello" b "whatever")
-
-(defn foo [{c :a d :b}]
-  )
-
-(run-system app-state :render)
-
-(def a 23)
-
-
-
-(let [a 42
-       (+ a 10)
-      a :foo]
-  b)
+(defn movement-system
+  [app-state eid estate]
+  (let [{:keys [pos vel]} estate
+        pos' (mapv + pos vel)]
+    (swap! app-state assoc-in [:entities eid :pos] pos')))
