@@ -51,7 +51,47 @@
       (new-entity! app-state)
       states)))
 
-(defn system
-  "Defines a new system"
-  [name f]
+(defn new-system!
+  "Defines a new system in the given app-state atom.
+  Asks for system name, a set of required component IDs and
+  a system function to process all matching entities."
+  [app-state name comp-ids f]
+  (swap! app-state assoc-in
+         [:systems name]
+         {:fn f
+          :comp-ids comp-ids}))
+
+(defn make-entity-validator
+  [comp-ids]
+  (let [valid-entity-keys? (partial set/subset? comp-ids)]
+    (fn [[_ v]]
+      (valid-entity-keys? (set (keys v))))))
+  
+(defn run-system
+  "Runs a single system fn on matching components"
+  [app-state name]
+  (let [{:keys [entities systems]} (deref app-state)
+        {sys-fn :fn comp-ids :comp-ids} (systems name)        
+        valid-entity? (make-entity-validator comp-ids)        
+        matching-entities (filter valid-entity? entities)]
+     (dorun
+       (map
+         (fn [[eid estate]] (sys-fn app-state eid estate))
+         matching-entities))))
+
+
+(let (a "hello" b "whatever")
+
+(defn foo [{c :a d :b}]
   )
+
+(run-system app-state :render)
+
+(def a 23)
+
+
+
+(let [a 42
+       (+ a 10)
+      a :foo]
+  b)
