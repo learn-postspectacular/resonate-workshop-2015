@@ -7,6 +7,7 @@
   :dependencies [[org.clojure/clojure "1.7.0-alpha5"]
                  [org.clojure/clojurescript "0.0-3165"]
                  [thi.ng/geom "0.0.777"]
+                 [thi.ng/domus "0.1.0"]
                  [cljsjs/react "0.12.2-5"]
                  [org.clojars.toxi/re-frame "0.2.0"]
                  [cljs-log "0.2.1"]
