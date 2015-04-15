@@ -9,12 +9,6 @@
     [reagent.core :as reagent]
     [re-frame.core :refer [register-sub subscribe dispatch]]))
 
-(defn canvas-component
-  []
-  (let [size (subscribe [:window-size])]
-    (fn []
-      [:canvas {:width (@size 0) :height (@size 1)}])))
-
 (defn canvas2
   []
   (let [size (subscribe [:window-size])]
@@ -24,4 +18,8 @@
        (fn [this]
          (dispatch [:canvas-mounted (.getContext (reagent/dom-node this) "2d")]))
        :reagent-render
-       (fn [] [:canvas {:key "main-canvas" :width (@size 0) :height (@size 1)}])})))
+       (fn []
+         [:canvas
+          {:key "main-canvas"
+           :width (@size 0)
+           :height (@size 1)}])})))

@@ -3,7 +3,6 @@
     [cljs-log.core :refer [info warn]]
     [reagent.ratom :refer [reaction]])
   (:require
-    [resonate2015.day2.ecs :as ecs :refer [run-system]]
     [resonate2015.day2.handlers]
     [resonate2015.day2.derivedviews]
     [resonate2015.day2.components.counter :as counter]
@@ -16,6 +15,10 @@
     [reagent.core :as reagent :refer [atom]]
     [re-frame.core :refer [register-sub subscribe dispatch]]))
 
+(defn add-shape-button
+  [type]
+  [:button {:on-click #(dispatch [:add-shape type])} "+ " (name type)])
+
 (defn main-panel
   []
   (let [init? (subscribe [:app-initialized?])]
@@ -26,7 +29,9 @@
          [fps/fps-panel {:id :fps :mode :fps :width 200 :col "limegreen"}]
          [:div#hud
           [counter/particle-count]
-          [:button {:on-click #(dispatch [:add-particles 10])} "+ add"]]]
+          [add-shape-button :circle]
+          [add-shape-button :triangle]
+          [add-shape-button :square]]]
         [:div
          [:h1 "Loading..."]]))))
 

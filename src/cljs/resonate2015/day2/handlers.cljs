@@ -21,6 +21,9 @@
   [e]
   (dispatch [:keydown (-> e .-target .-keyCode)]))
 
+(defn dispatch-mousemove
+  [e])
+
 (defn init-dom-events
   [db]
   (assoc db
@@ -29,7 +32,12 @@
                    dispatch-resize))
     :keydown (or (:keydown db)
                  (do (.addEventListener js/window "keydown" dispatch-keydown)
-                   dispatch-keydown))))
+                   dispatch-keydown))
+    :mousemove (if-let [m (:mousemove db)]
+                 m
+                 (do (.addEventListener js/window "mousemove" dispatch-mousemove)
+                   dispatch-mousemove))))
+
 
 (register-handler
   :init-app
@@ -61,3 +69,13 @@
     (reduce
       (fn [db _] (demo/make-particle db))
       db (range n))))
+
+(register-handler
+  :add-shape
+  (fn [db [_ type]]
+    (info :add-shape type)
+    (case type
+      :circle (demo/make-circle db)
+      :triangle (demo/make-triangle db)
+      :square (demo/make-square db)
+      (warn "invalid shape type" type)))) 
