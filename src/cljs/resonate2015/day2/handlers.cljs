@@ -61,7 +61,9 @@
 (register-handler
   :canvas-mounted
   (fn [db [_ ctx]]
-    (assoc db :canvas-ctx ctx)))
+    (assoc db
+           :canvas-ctx ctx
+           :shape-protos {:circle (demo/webgl-circle-spec ctx 50)})))
 
 (register-handler
   :add-particles

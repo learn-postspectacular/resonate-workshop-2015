@@ -16,7 +16,7 @@
       {:display-name "canvas"
        :component-did-mount
        (fn [this]
-         (dispatch [:canvas-mounted (.getContext (reagent/dom-node this) "2d")]))
+         (dispatch [:canvas-mounted (.getContext (reagent/dom-node this) "webgl")]))
        :reagent-render
        (fn []
          [:canvas

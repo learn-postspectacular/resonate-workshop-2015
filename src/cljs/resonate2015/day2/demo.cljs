@@ -6,10 +6,26 @@
     [resonate2015.day2.tick :as tick]
     [thi.ng.geom.core :as g]
     [thi.ng.geom.core.vector :as v :refer [vec2]]
+    [thi.ng.geom.core.matrix :as mat :refer [M44]]
     [thi.ng.geom.circle :as c]
     [thi.ng.geom.polygon :as p]
+    [thi.ng.geom.webgl.core :as gl]
+    [thi.ng.geom.webgl.buffers :as buffers]
+    [thi.ng.geom.webgl.shaders :as shaders]    
+    [thi.ng.geom.webgl.shaders.basic :as basic]    
     [thi.ng.common.math.core :as m]
     [re-frame.core :refer [dispatch]]))
+  
+(defn webgl-circle-spec
+  [ctx radius]
+  (let [spec (-> (c/circle radius)
+                 (g/as-polygon 20)
+                 (gl/as-webgl-buffer-spec {:normals false})
+                 (buffers/make-attribute-buffers-in-spec ctx gl/static-draw)
+                 (assoc :shader (shaders/make-shader-from-spec ctx
+                                  (basic/make-color-shader-spec
+                                    {:use-attrib false :3d false}))))]
+    spec))
 
 (defn make-particle
   [{[w h] :window-size :as db}]
@@ -40,6 +56,8 @@
   [state _]
   (update state :pos g/+ (:vel state) (v/randvec2 5)))
 
+#_(comment
+  
 (defn draw-circle
   [ctx [x y]]
   (.beginPath ctx)
@@ -79,6 +97,18 @@
       :square   (draw-poly ctx pos 4)
       nil))
   state)
+)
+
+(defn webgl-render-entity
+  [{:keys [pos render] :as state} {ctx :canvas-ctx :as db}]
+  (let [model (get-in db [:shape-protos :circle])]
+    (when ctx
+      (buffers/draw-arrays
+        ctx (-> model
+                (update-in [:uniforms] merge
+                           {:proj  (gl/ortho)
+                            :model (-> M44 (g/translate 0 0 0))
+                            :color [0 1 1 1]}))))))
 
 (def ecs-tick-handler
   (reify tick/PTickHandler
@@ -87,12 +117,15 @@
       (-> db
           (merge (ecs/make-ecs))
           (ecs/register-system :movers #{:pos :vel} move-entity)
-          (ecs/register-system :render #{:render} render-entity)))
+          (ecs/register-system :render #{:render} webgl-render-entity)))
     (tick
       [_ {ctx :canvas-ctx [w h] :window-size :as db}]
       (when ctx
-        (.clearRect ctx 0 0 w h)
-        (set! (.-fillStyle ctx) "#f0f"))
+        ;;(.clearRect ctx 0 0 w h)
+        ;;(set! (.-fillStyle ctx) "#f0f")
+        (gl/set-viewport ctx 0 0 w h)
+        (gl/clear-color-buffer ctx 1 1 0 1.0)
+        )
       (-> db
           (ecs/run-system :movers)
           (ecs/run-system :render)))))
