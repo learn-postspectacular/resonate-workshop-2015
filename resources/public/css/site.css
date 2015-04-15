@@ -1,0 +1,33 @@
+html, body {
+    margin:0;
+    padding:0;
+    overflow: hidden;
+    font-family: Helvetica, Arial, sans-serif;
+    font-size: 14px;
+}
+
+#app {
+    
+}
+
+#hud {
+    position: fixed;
+    top: 20px;
+    left: 20px;
+    z-index: 1000;
+}
+
+#fps {
+    position: fixed;
+    top: 0px;
+    right: 0px;
+    z-index: 1000;
+}
+
+button {
+    background: #0cf;
+    color: #fff;
+    padding: 10px;
+    border: 0;
+    border-radius: 4px;
+}

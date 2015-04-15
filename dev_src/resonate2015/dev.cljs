@@ -1,6 +1,6 @@
 (ns resonate2015.dev
     (:require
-     [resonate2015.day1.core]
+     [resonate2015.day2.core]
      [figwheel.client :as fw]))
 
 (fw/start {

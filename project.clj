@@ -35,7 +35,7 @@
                           {:id "min"
                            :source-paths ["src/cljs"]
                            :compiler {:output-to "resources/public/js/app.js"
-                                      :main resonate2015.core
+                                      :main resonate2015.day2.core
                                       :optimizations :advanced
                                       :pretty-print false}}]}
 
