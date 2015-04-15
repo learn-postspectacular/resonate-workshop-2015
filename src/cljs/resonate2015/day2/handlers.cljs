@@ -78,4 +78,7 @@
       :circle (demo/make-circle db)
       :triangle (demo/make-triangle db)
       :square (demo/make-square db)
+      :particle (reduce
+                  (fn [db _] (demo/make-particle db))
+                  db (range 10))
       (warn "invalid shape type" type)))) 
