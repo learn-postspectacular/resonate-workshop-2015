@@ -15,3 +15,7 @@
 (register-sub
   :particle-count
   (fn [db _] (reaction (count (:entities @db)))))
+
+(register-sub
+  :current-shader
+  (fn [db _] (reaction (:curr-shader @db))))

@@ -50,6 +50,7 @@
                   (assoc :window-size  size
                          :view-rect    (apply r/rect size)
                          :world-bounds (g/center (a/aabb 150))
+                         :curr-shader  :lambert
                          :initialized? true))
          db   (if-not (:tick/tick db)
                 (tick/init-ticker db)
@@ -70,13 +71,12 @@
 (register-handler
  :canvas-mounted
  (fn [db [_ ctx]]
-   (info :webgl-ready)
-   (-> db
-       (assoc :canvas-ctx ctx
-              :shape-protos {:sphere (demo/webgl-shape-spec ctx (demo/ico-mesh 1))
-                             :ico    (demo/webgl-shape-spec ctx (demo/ico-mesh 0))
-                             :box    (demo/webgl-shape-spec ctx (demo/box-mesh))})
-       (demo/update-shape-protos))))
+   (demo/init-webgl db ctx)))
+
+(register-handler
+ :set-shader
+ (fn [db [_ id]]
+   (assoc db :curr-shader (keyword id))))
 
 (register-handler
  :add-shape
@@ -87,4 +87,6 @@
      :ico       (demo/make-pyramid db)
      :box       (demo/make-box db)
      :particles (demo/make-particles db)
-     (warn "invalid shape type" type))))
+     (do
+       (warn "invalid shape type" type)
+       db))))

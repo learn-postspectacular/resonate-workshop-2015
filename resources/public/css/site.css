@@ -2,12 +2,15 @@ html, body {
     margin:0;
     padding:0;
     overflow: hidden;
-    font-family: Helvetica, Arial, sans-serif;
-    font-size: 14px;
+    font-size: 16px;
 }
 
-#app {
-    
+body, button, select {
+    font-family: Inconsolata, monospace;
+}
+
+#loading {
+    margin: 1em;
 }
 
 #hud {
@@ -17,6 +20,10 @@ html, body {
     z-index: 1000;
 }
 
+#hud div {
+    margin-bottom: 1em;
+}
+
 #fps {
     position: fixed;
     top: 0px;
@@ -24,11 +31,66 @@ html, body {
     z-index: 1000;
 }
 
-button {
-    background: #0cf;
+h1 {
+    margin: 0 0 10px 0;
+}
+
+button, select {
+    background: #333;
     color: #fff;
-    padding: 10px;
+    padding: 1em;
     border: 0;
     border-radius: 4px;
     margin-right: 10px;
+}
+
+select {
+    width: 10em;
+    height: 3em;
+}
+
+.animated {
+    -webkit-animation-duration: 1s;
+    animation-duration: 1s;
+    -webkit-animation-fill-mode: both;
+    animation-fill-mode: both;
+}
+
+@-webkit-keyframes bounceInDown {
+    0% {
+        opacity: 0;
+        -webkit-transform: translateY(-200px);
+    }
+    60% {
+        opacity: 1;
+        -webkit-transform: translateY(30px);
+    }
+    80% {
+        -webkit-transform: translateY(-10px);
+    }
+    100% {
+        -webkit-transform: translateY(0);
+    }
+}
+
+@keyframes bounceInDown {
+    0% {
+        opacity: 0;
+        transform: translateY(-200px);
+    }
+    60% {
+        opacity: 1;
+        transform: translateY(30px);
+    }
+    80% {
+        transform: translateY(-10px);
+    }
+    100% {
+        transform: translateY(0);
+    }
+}
+
+.bounceInDown {
+    -webkit-animation-name: bounceInDown;
+    animation-name: bounceInDown;
 }

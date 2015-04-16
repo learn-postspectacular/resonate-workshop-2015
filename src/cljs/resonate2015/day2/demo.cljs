@@ -17,29 +17,42 @@
    [thi.ng.geom.webgl.buffers :as buffers]
    [thi.ng.geom.webgl.shaders :as shaders]
    [thi.ng.geom.webgl.shaders.lambert :as lambert]
+   [thi.ng.geom.webgl.shaders.phong :as phong]
    [thi.ng.color.core :as col]
    [thi.ng.common.math.core :as m]
    [re-frame.core :refer [dispatch]]))
 
+(def shape-types [:particles :sphere :ico :box])
+
+(def shader-uniforms
+  {:lambert {:lightCol [1 0.8 0.5]
+             :lightDir (g/normalize (vec3 0 1 0.5))
+             :alpha    1}
+   :phong   {:shininess     32
+             :specularCol   [1 1 1]
+             :lightPos      [-100 100 150]
+             :useBlinnPhong true
+             :wrap          0}})
+
 (defn box-mesh
-  [] (g/into (bm/basic-mesh) (g/faces (g/center (a/aabb 1)))))
+  []
+  (->> (a/aabb 1) (g/center) (g/faces) (g/into (bm/basic-mesh))))
 
 (defn ico-mesh
   [iter] (polyhedra/polyhedron-mesh polyhedra/icosahedron sd/catmull-clark 1 iter))
 
+(defn webgl-init-shaders
+  [ctx]
+  {:lambert (shaders/make-shader-from-spec ctx lambert/shader-spec)
+   :phong   (shaders/make-shader-from-spec ctx phong/shader-spec)})
+
 (defn webgl-shape-spec
   [ctx mesh]
-  (let [spec (-> mesh
-                 (gl/as-webgl-buffer-spec {:fnormals true :tessellate true})
-                 (buffers/make-attribute-buffers-in-spec ctx gl/static-draw)
-                 (assoc :shader
-                        (shaders/make-shader-from-spec ctx lambert/shader-spec)
-                        :uniforms {:view       (mat/look-at (vec3 0 0 100) (vec3 0 1 0) (vec3 0 1 0))
-                                   :ambientCol [0.2 0.2 0.2]
-                                   :lightCol   [1 1 1]
-                                   :lightDir   (g/normalize (vec3 0 1 0.5))
-                                   :alpha      1}))]
-    spec))
+  (-> mesh
+      (gl/as-webgl-buffer-spec {:fnormals true :tessellate true})
+      (buffers/make-attribute-buffers-in-spec ctx gl/static-draw)
+      (assoc :uniforms {:view (mat/look-at (vec3 0 0 100) (vec3 0 1 0) (vec3 0 1 0))
+                        :ambientCol [0.2 0.2 0.2]})))
 
 (defn update-shape-protos
   [db]
@@ -69,7 +82,7 @@
 (defn make-hover-shape
   [db type color]
   (ecs/register-entity
-   db {:orig-pos (v/randvec3 (m/random 100))
+   db {:orig-pos (v/randvec3 (m/random 80))
        :render type
        :color  color
        :scale  (m/random 1 10)
@@ -105,19 +118,24 @@
   [{:keys [pos render color scale spin] :as state}
    {ctx :canvas-ctx [w h] :window-size :as db}]
   (when ctx
-    (let [model     (get-in db [:shape-protos render])
-          model-mat (if spin
-                      (-> M44
-                          (g/translate pos)
-                          (g/rotate-around-axis (:axis spin) (:theta spin))
-                          (g/scale scale))
-                      (-> M44
-                          (g/translate pos)
-                          (g/scale scale)))]
+    (let [model       (get-in db [:shape-protos render])
+          shader-type (:curr-shader db)
+          model-mat   (if spin
+                        (-> M44
+                            (g/translate pos)
+                            (g/rotate-around-axis (:axis spin) (:theta spin))
+                            (g/scale scale))
+                        (-> M44
+                            (g/translate pos)
+                            (g/scale scale)))]
       (lambert/draw
-       ctx (update-in model [:uniforms] merge
+       ctx
+       (-> model
+           (assoc :shader (get-in db [:shaders shader-type]))
+           (update-in [:uniforms] merge
+                      (shader-uniforms shader-type)
                       {:model      model-mat
-                       :diffuseCol (or color [0 0 0])}))))
+                       :diffuseCol (or color [1 1 1])})))))
   state)
 
 (def ecs-tick-handler
@@ -132,11 +150,24 @@
           (ecs/register-system :render #{:render} webgl-render-entity)))
     (tick
       [_ {ctx :canvas-ctx [w h] :window-size :as db}]
-      (when ctx
-        (gl/set-viewport ctx 0 0 w h)
-        (gl/clear-color-buffer ctx 0.9 0.9 0.9 1.0)
-        (gl/enable ctx gl/depth-test)
-        (reduce ecs/run-system db [:move :spin :hover :render])))))
+      (if ctx
+        (do
+          (gl/set-viewport ctx 0 0 w h)
+          (gl/clear-color-buffer ctx 0.9 0.9 0.9 1.0)
+          (gl/enable ctx gl/depth-test)
+          (reduce ecs/run-system db [:move :spin :hover :render]))
+        db))))
 
 (defn start
   [] (dispatch [:add-tick-handlers {:ecs ecs-tick-handler}]))
+
+(defn init-webgl
+  [db ctx]
+  (-> db
+      (assoc :canvas-ctx   ctx
+             :curr-shader  :phong
+             :shaders      (webgl-init-shaders ctx)
+             :shape-protos {:sphere (webgl-shape-spec ctx (ico-mesh 1))
+                            :ico    (webgl-shape-spec ctx (ico-mesh 0))
+                            :box    (webgl-shape-spec ctx (box-mesh))})
+      (update-shape-protos)))
