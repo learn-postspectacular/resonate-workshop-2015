@@ -29,10 +29,10 @@
          [fps/fps-panel {:id :fps :mode :fps :width 200 :col "limegreen"}]
          [:div#hud
           [counter/particle-count]
-          [add-shape-button :particle]
-          [add-shape-button :circle]
-          [add-shape-button :triangle]
-          [add-shape-button :square]]]
+          [add-shape-button :particles]
+          [add-shape-button :sphere]
+          [add-shape-button :ico]
+          [add-shape-button :box]]]
         [:div
          [:h1 "Loading..."]]))))
 

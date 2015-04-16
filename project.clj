@@ -5,7 +5,7 @@
                  :url "https://www.apache.org/licenses/LICENSE-2.0"}
 
   :dependencies [[org.clojure/clojure "1.7.0-alpha5"]
-                 [org.clojure/clojurescript "0.0-3165"]
+                 [org.clojure/clojurescript "0.0-3196"]
                  [thi.ng/geom "0.0.777-dirty"]
                  [thi.ng/domus "0.1.0"]
                  [cljsjs/react "0.12.2-5"]

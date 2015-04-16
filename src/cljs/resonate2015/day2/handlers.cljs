@@ -6,7 +6,9 @@
    [resonate2015.day2.tick :as tick]
    [resonate2015.day2.demo :as demo]
    [resonate2015.day2.components.fps :as fps]
+   [thi.ng.geom.core :as g]
    [thi.ng.geom.rect :as r]
+   [thi.ng.geom.aabb :as a]
    [re-frame.core :refer [register-handler dispatch]]))
 
 (defn window-size
@@ -47,6 +49,7 @@
                   (init-dom-events)
                   (assoc :window-size  size
                          :view-rect    (apply r/rect size)
+                         :world-bounds (g/center (a/aabb 150))
                          :initialized? true))
          db   (if-not (:tick/tick db)
                 (tick/init-ticker db)
@@ -60,8 +63,8 @@
  (fn [db [_ size]]
    (let [size (or size (window-size))]
      (-> db
-         (assoc :window-size size
-                :view-rect   (apply r/rect size))
+         (assoc :window-size  size
+                :view-rect    (apply r/rect size))
          (demo/update-shape-protos)))))
 
 (register-handler
@@ -70,25 +73,18 @@
    (info :webgl-ready)
    (-> db
        (assoc :canvas-ctx ctx
-              :shape-protos {:circle   (demo/webgl-shape-spec ctx 20)
-                             :triangle (demo/webgl-shape-spec ctx 3)
-                             :square   (demo/webgl-shape-spec ctx 4)})
+              :shape-protos {:sphere (demo/webgl-shape-spec ctx (demo/ico-mesh 1))
+                             :ico    (demo/webgl-shape-spec ctx (demo/ico-mesh 0))
+                             :box    (demo/webgl-shape-spec ctx (demo/box-mesh))})
        (demo/update-shape-protos))))
-
-(register-handler
- :add-particles
- (fn [db [_ n]]
-   (reduce
-    (fn [db _] (demo/make-particle db))
-    db (range n))))
 
 (register-handler
  :add-shape
  (fn [db [_ type]]
    (info :add-shape type)
    (case type
-     :circle   (demo/make-circle db)
-     :triangle (demo/make-triangle db)
-     :square   (demo/make-square db)
-     :particle (demo/make-particle db)
+     :sphere    (demo/make-sphere db)
+     :ico       (demo/make-pyramid db)
+     :box       (demo/make-box db)
+     :particles (demo/make-particles db)
      (warn "invalid shape type" type))))
