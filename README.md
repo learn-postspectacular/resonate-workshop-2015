@@ -41,7 +41,7 @@ TBA
 ### Clojure & ClojureScript introduction
 
 - [Clojure](http://clojure.org)
-- [ClojureScript](https://github.com/clojure/clojurescript) ([quickstart](), [wiki]())
+- [ClojureScript](https://github.com/clojure/clojurescript) ([quickstart](https://github.com/clojure/clojurescript/wiki/Quick-Start), [wiki](https://github.com/clojure/clojurescript/wiki))
 - [Leiningen sample project (full options)](https://github.com/technomancy/leiningen/blob/master/sample.project.clj)
 
 #### Tutorials
@@ -66,7 +66,7 @@ TBA
 ### Data, data, data (derived views, compute graphs etc.)
 
 - [Turning the DB inside out](https://www.youtube.com/watch?v=fU9hR3kiOK0)
-- [Signal/Collect](http://signalcollect.org)
+- [Signal/Collect](http://www.signalcollect.com)
 
 
 ## Get in touch
