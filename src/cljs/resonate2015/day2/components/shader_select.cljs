@@ -9,6 +9,6 @@
     (fn []
       [:select
        {:on-change #(dispatch [:set-shader (-> % .-target .-value)])
-        :value (name @shader)}
+        :value @shader}
        (for [id ids]
          [:option {:key id :value id} (str/capitalize (name id))])])))

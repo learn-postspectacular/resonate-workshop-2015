@@ -6,9 +6,8 @@
    [resonate2015.day2.tick :as tick]
    [resonate2015.day2.demo :as demo]
    [resonate2015.day2.components.fps :as fps]
-   [thi.ng.geom.core :as g]
+   [thi.ng.geom.core.vector :refer [vec2]]
    [thi.ng.geom.rect :as r]
-   [thi.ng.geom.aabb :as a]
    [re-frame.core :refer [register-handler dispatch]]))
 
 (defn window-size
@@ -17,15 +16,13 @@
    (.-innerHeight js/window)])
 
 (defn dispatch-resize
-  []
-  (dispatch [:resize-window (window-size)]))
+  [e] (dispatch [:resize-window (window-size)]))
 
 (defn dispatch-keydown
-  [e]
-  (dispatch [:keydown (-> e .-target .-keyCode)]))
+  [e] (dispatch [:keydown (.-keyCode e)]))
 
 (defn dispatch-mousemove
-  [e])
+  [e] (dispatch [:set-mouse-pos (.-clientX e) (.-clientY e)]))
 
 (defn init-dom-events
   [db]
@@ -48,35 +45,46 @@
          db   (-> db
                   (init-dom-events)
                   (assoc :window-size  size
-                         :view-rect    (apply r/rect size)
-                         :world-bounds (g/center (a/aabb 150))
-                         :curr-shader  :lambert
                          :initialized? true))
          db   (if-not (:tick/tick db)
                 (tick/init-ticker db)
                 db)]
      (fps/register-fps-counter :fps-counter)
-     (demo/start)
      db)))
 
 (register-handler
  :resize-window
  (fn [db [_ size]]
    (let [size (or size (window-size))]
-     (-> db
-         (assoc :window-size  size
-                :view-rect    (apply r/rect size))
-         (demo/update-shape-protos)))))
+     (assoc db
+            :window-size size
+            :view-rect   (apply r/rect size)))))
 
 (register-handler
  :canvas-mounted
  (fn [db [_ ctx]]
-   (demo/init-webgl db ctx)))
+   (demo/start db ctx)))
 
 (register-handler
  :set-shader
  (fn [db [_ id]]
    (assoc db :curr-shader (keyword id))))
+
+(register-handler
+ :set-mouse-pos
+ (fn [db [_ x y]]
+   (assoc db :mouse-pos (vec2 x y))))
+
+(register-handler
+ :keydown
+ (fn [db [_ id]]
+   (info :key id)
+   (case id
+     0x20 (dispatch [:add-shape :particles])
+     0x4c (dispatch [:set-shader :lambert])
+     0x50 (dispatch [:set-shader :phong])
+     nil)
+   db))
 
 (register-handler
  :add-shape
