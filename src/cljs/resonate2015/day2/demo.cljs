@@ -56,8 +56,8 @@
   [{[x y] :mouse-pos [w h] :window-size :as db}]
   (let [proj  (gl/perspective 45 (/ w h) 0.1 1000)
         view  (-> (mat/look-at (vec3 0 0 100) (vec3 0 1 0) (vec3 0 1 0))
-                  (g/rotate-x (* 0.01 (or y 0)))
-                  (g/rotate-y (* 0.01 (or x 0))))]
+                  (g/rotate-x (* 0.01 y))
+                  (g/rotate-y (* 0.01 x)))]
     (update db :shape-protos
             #(reduce-kv
               (fn [acc id spec]
@@ -127,7 +127,7 @@
    {ctx :canvas-ctx [w h] :window-size :as db}]
   (when ctx
     (let [model       (get-in db [:shape-protos render])
-          shader-type (:curr-shader db)
+          shader-type (db :curr-shader :lambert)
           model-mat   (if spin
                         (-> M44
                             (g/translate pos)
@@ -143,10 +143,10 @@
            (update-in [:uniforms] merge
                       (shader-uniforms shader-type)
                       {:model      model-mat
-                       :diffuseCol (or color [1 1 1])})))))
+                       :diffuseCol color})))))
   state)
 
-(def ecs-tick-handler
+(def demo-handler
   (reify tick/PTickHandler
     (init-state
       [_ db]
@@ -163,14 +163,15 @@
           (gl/set-viewport ctx 0 0 w h)
           (gl/clear-color-buffer ctx 0.9 0.9 0.9 1.0)
           (gl/enable ctx gl/depth-test)
-          (reduce ecs/run-system
-                  (update-shape-protos db)
-                  [:move :spin :hover :render]))
+          (reduce
+           ecs/run-system
+           (update-shape-protos db)
+           [:move :spin :hover :render]))
         db))))
 
 (defn start
   [db ctx]
-  (dispatch [:add-tick-handlers {:ecs ecs-tick-handler}])
+  (dispatch [:add-tick-handlers {:demo demo-handler}])
   (-> db
       (assoc :canvas-ctx   ctx
              :curr-shader  :phong

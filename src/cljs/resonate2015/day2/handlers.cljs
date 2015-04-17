@@ -1,7 +1,6 @@
 (ns resonate2015.day2.handlers
   (:require-macros
-   [cljs-log.core :refer [info warn]]
-   [reagent.ratom :refer [reaction]])
+   [cljs-log.core :refer [info warn]])
   (:require
    [resonate2015.day2.tick :as tick]
    [resonate2015.day2.demo :as demo]
@@ -20,20 +19,21 @@
   [e] (dispatch [:keydown (.-keyCode e)]))
 
 (defn dispatch-mousemove
-  [e] (dispatch [:set-mouse-pos (.-clientX e) (.-clientY e)]))
+  [e] (dispatch [:set-mouse-pos (vec2 (.-clientX e) (.-clientY e))]))
+
+(defn add-dom-listener-if-missing
+  [db id fn]
+  (if-not (db id)
+    (do (.addEventListener js/window (name id) fn)
+        (assoc db id fn))
+    db))
 
 (defn init-dom-events
   [db]
-  (assoc db
-         :resize    (or (:resize db)
-                        (do (.addEventListener js/window "resize" dispatch-resize)
-                            dispatch-resize))
-         :keydown   (or (:keydown db)
-                        (do (.addEventListener js/window "keydown" dispatch-keydown)
-                            dispatch-keydown))
-         :mousemove (or (:mousemove db)
-                        (do (.addEventListener js/window "mousemove" dispatch-mousemove)
-                            dispatch-mousemove))))
+  (-> db
+      (add-dom-listener-if-missing :resize dispatch-resize)
+      (add-dom-listener-if-missing :keydown dispatch-keydown)
+      (add-dom-listener-if-missing :mousemove dispatch-mousemove)))
 
 (register-handler
  :init-app
@@ -41,6 +41,7 @@
    (let [db (-> db
                 (init-dom-events)
                 (assoc :window-size  (window-size)
+                       :mouse-pos    (vec2)
                        :initialized? true))
          db (if-not (:tick/tick db) (tick/init-ticker db) db)]
      (fps/register-fps-counter :fps-counter)
@@ -61,7 +62,10 @@
  :set-shader (fn [db [_ id]] (assoc db :curr-shader (keyword id))))
 
 (register-handler
- :set-mouse-pos (fn [db [_ x y]] (assoc db :mouse-pos (vec2 x y))))
+ :set-mouse-pos (fn [db [_ mpos]] (assoc db :mouse-pos mpos)))
+
+(register-handler
+ :add-shape (fn [db [_ type]] (demo/make-shape db type)))
 
 (register-handler
  :keydown
@@ -72,9 +76,3 @@
      0x50 (dispatch [:set-shader :phong])    ;; P
      nil)
    db))
-
-(register-handler
- :add-shape
- (fn [db [_ type]]
-   (info :add-shape type)
-   (demo/make-shape db type)))

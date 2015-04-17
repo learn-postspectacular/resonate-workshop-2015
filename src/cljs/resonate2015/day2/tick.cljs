@@ -1,7 +1,6 @@
 (ns resonate2015.day2.tick
   (:require-macros
-    [cljs-log.core :refer [info warn]]
-    [reagent.ratom :refer [reaction]])
+    [cljs-log.core :refer [info warn]])
   (:require
     [reagent.core :as reagent]
     [re-frame.core :refer [register-handler dispatch trim-v]]))
