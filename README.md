@@ -1,5 +1,7 @@
 # resonate-workshop-2015
 
+[!screenshot](screenshot.jpg)
+
 [![Gitter](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/learn-postspectacular/resonate-workshop-2015?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
 April 13-15, 2015 Belgrade
