@@ -66,8 +66,23 @@
                             :view view}))
               % %))))
 
-(defn make-particles
-  [{[w h] :window-size :as db}]
+(defn make-hover-shape
+  [db type color]
+  (ecs/register-entity
+   db {:orig-pos    (randvec3 (m/random 80))
+       :render      type
+       :color       color
+       :scale       (m/random 1 10)
+       :hover       (m/random m/TWO_PI)
+       :hover-speed (m/random 0.01 0.05)}))
+
+(defmulti make-shape (fn [db type] type))
+
+(defmethod make-shape :default
+  [db type] (warn "unknown shape type:" type) db)
+
+(defmethod make-shape :particles
+  [{[w h] :window-size :as db} _]
   (let [origin (randvec3)]
     (reduce
      (fn [db _]
@@ -82,24 +97,14 @@
                      :speed (m/random -0.2 0.2)}}))
      db (range 10))))
 
-(defn make-hover-shape
-  [db type color]
-  (ecs/register-entity
-   db {:orig-pos    (randvec3 (m/random 80))
-       :render      type
-       :color       color
-       :scale       (m/random 1 10)
-       :hover       (m/random m/TWO_PI)
-       :hover-speed (m/random 0.01 0.05)}))
+(defmethod make-shape :sphere
+  [db type] (make-hover-shape db type (col/hsv->rgb 0.08 0.33 1)))
 
-(defn make-sphere
-  [db] (make-hover-shape db :sphere (col/hsv->rgb 0.08 0.33 1)))
+(defmethod make-shape :ico
+  [db type] (make-hover-shape db type (col/hsv->rgb 0.5 0.33 1)))
 
-(defn make-pyramid
-  [db] (make-hover-shape db :ico (col/hsv->rgb 0.5 0.33 1)))
-
-(defn make-box
-  [db] (make-hover-shape db :box (col/hsv->rgb 0.92 0.33 1)))
+(defmethod make-shape :box
+  [db type] (make-hover-shape db type (col/hsv->rgb 0.92 0.33 1)))
 
 (defn move-entity
   [{:keys [pos vel] :as state} {bounds :world-bounds}]

@@ -11,9 +11,7 @@
    [re-frame.core :refer [register-handler dispatch]]))
 
 (defn window-size
-  []
-  [(.-innerWidth js/window)
-   (.-innerHeight js/window)])
+  [] [(.-innerWidth js/window) (.-innerHeight js/window)])
 
 (defn dispatch-resize
   [e] (dispatch [:resize-window (window-size)]))
@@ -27,28 +25,24 @@
 (defn init-dom-events
   [db]
   (assoc db
-         :resize  (or (:resize db)
-                      (do (.addEventListener js/window "resize" dispatch-resize)
-                          dispatch-resize))
-         :keydown (or (:keydown db)
-                      (do (.addEventListener js/window "keydown" dispatch-keydown)
-                          dispatch-keydown))
-         :mousemove (if-let [m (:mousemove db)]
-                      m
-                      (do (.addEventListener js/window "mousemove" dispatch-mousemove)
-                          dispatch-mousemove))))
+         :resize    (or (:resize db)
+                        (do (.addEventListener js/window "resize" dispatch-resize)
+                            dispatch-resize))
+         :keydown   (or (:keydown db)
+                        (do (.addEventListener js/window "keydown" dispatch-keydown)
+                            dispatch-keydown))
+         :mousemove (or (:mousemove db)
+                        (do (.addEventListener js/window "mousemove" dispatch-mousemove)
+                            dispatch-mousemove))))
 
 (register-handler
  :init-app
  (fn [db _]
-   (let [size (window-size)
-         db   (-> db
-                  (init-dom-events)
-                  (assoc :window-size  size
-                         :initialized? true))
-         db   (if-not (:tick/tick db)
-                (tick/init-ticker db)
-                db)]
+   (let [db (-> db
+                (init-dom-events)
+                (assoc :window-size  (window-size)
+                       :initialized? true))
+         db (if-not (:tick/tick db) (tick/init-ticker db) db)]
      (fps/register-fps-counter :fps-counter)
      db)))
 
@@ -61,28 +55,21 @@
             :view-rect   (apply r/rect size)))))
 
 (register-handler
- :canvas-mounted
- (fn [db [_ ctx]]
-   (demo/start db ctx)))
+ :canvas-mounted (fn [db [_ ctx]] (demo/start db ctx)))
 
 (register-handler
- :set-shader
- (fn [db [_ id]]
-   (assoc db :curr-shader (keyword id))))
+ :set-shader (fn [db [_ id]] (assoc db :curr-shader (keyword id))))
 
 (register-handler
- :set-mouse-pos
- (fn [db [_ x y]]
-   (assoc db :mouse-pos (vec2 x y))))
+ :set-mouse-pos (fn [db [_ x y]] (assoc db :mouse-pos (vec2 x y))))
 
 (register-handler
  :keydown
  (fn [db [_ id]]
-   (info :key id)
    (case id
-     0x20 (dispatch [:add-shape :particles])
-     0x4c (dispatch [:set-shader :lambert])
-     0x50 (dispatch [:set-shader :phong])
+     0x20 (dispatch [:add-shape :particles]) ;; space
+     0x4c (dispatch [:set-shader :lambert])  ;; L
+     0x50 (dispatch [:set-shader :phong])    ;; P
      nil)
    db))
 
@@ -90,11 +77,4 @@
  :add-shape
  (fn [db [_ type]]
    (info :add-shape type)
-   (case type
-     :sphere    (demo/make-sphere db)
-     :ico       (demo/make-pyramid db)
-     :box       (demo/make-box db)
-     :particles (demo/make-particles db)
-     (do
-       (warn "invalid shape type" type)
-       db))))
+   (demo/make-shape db type)))
