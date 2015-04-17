@@ -65,11 +65,15 @@
   a set of required component IDs and a system function to process
   a matching entity."
   [ecs name comp-ids sys-fn]
-  (let [valid? (entity-validator comp-ids)]
+  (let [valid? (entity-validator comp-ids)
+        ids    (into #{}
+                     (comp (filter (comp valid? val))
+                           (map key))
+                     (:entities ecs))]
     (assoc-in ecs [:systems name]
               {:fn       sys-fn
                :valid?   valid?
-               :entities #{}})))
+               :entities ids})))
 
 (defn run-system
   "Runs a single system fn on matching components"
