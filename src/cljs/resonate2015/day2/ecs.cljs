@@ -33,12 +33,17 @@
                       acc))))
               % %))))
 
+(defn set-entity
+  "Takes an ECS map, entity ID and entity state which is to be used as
+  the entity's new state."
+  [ecs eid state]
+  (assoc-in ecs [:entities eid] state))
+
 (defn update-entity
   "Takes an ECS map, entity ID and an update fn with optional args.
   Applies fn and args via update-in to entity's current state."
   [ecs eid f & args]
-  (-> (apply update-in ecs [:entities eid] f args)
-      (update-entity-in-systems eid)))
+  (-> (apply update-in ecs [:entities eid] f args)))
 
 (defn register-entity
   "Takes an ECS map and optional map of component states.
@@ -50,7 +55,12 @@
    (let [eid (inc (:eid ecs))]
      (-> ecs
          (assoc :eid eid)
-         (update-entity eid merge comps)))))
+         (update-entity eid merge comps)
+         (update-entity-in-systems eid)))))
+
+(defn remove-entity
+  "Takes an ECS map and removes given entity ID from entities."
+  [ecs eid] (update ecs :entities dissoc eid))
 
 (defn entity-validator
   "Takes a seq or set of component IDs, returns a predicate fn which,
@@ -76,15 +86,13 @@
                :entities ids})))
 
 (defn run-system
-  "Runs a single system fn on matching components"
-  [{:keys [systems] :as ecs} name]
-  (let [{sys-fn :fn sys-entity-ids :entities} (systems name)
-        ecs (update ecs :entities
-                    #(reduce
-                      (fn [acc eid]
-                        (let [state' (sys-fn (acc eid) ecs)]
-                          (if state'
-                            (assoc acc eid state')
-                            (dissoc acc eid))))
-                      % sys-entity-ids))]
-    (reduce update-entity-in-systems ecs sys-entity-ids)))
+  "Runs a single system fn on matching components."
+  [{:keys [entities systems] :as ecs} name]
+  (let [{sys-fn :fn sys-entity-ids :entities} (systems name)]
+    (as-> ecs ecs
+      (reduce
+       (fn [acc eid] (sys-fn acc eid (entities eid)))
+       ecs sys-entity-ids)
+      (reduce
+       update-entity-in-systems
+       ecs sys-entity-ids))))

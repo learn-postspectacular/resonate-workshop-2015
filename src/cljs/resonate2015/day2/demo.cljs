@@ -53,7 +53,8 @@
       (assoc :uniforms {:ambientCol [0.2 0.2 0.25]})))
 
 (defn update-shape-protos
-  [{[x y] :mouse-pos [w h] :window-size :as db}]
+  [{[x y] :mouse-pos
+    [w h] :window-size :as db}]
   (let [proj  (gl/perspective 45 (/ w h) 0.1 1000)
         view  (-> (mat/look-at (vec3 0 0 100) (vec3 0 1 0) (vec3 0 1 0))
                   (g/rotate-x (* 0.01 y))
@@ -107,24 +108,28 @@
   [db type] (make-hover-shape db type (col/hsv->rgb 0.92 0.33 1)))
 
 (defn move-entity
-  [{:keys [pos vel] :as state} {bounds :world-bounds}]
+  [{bounds :world-bounds :as ecs} eid {:keys [pos vel] :as state}]
   (let [pos (g/+ pos vel)]
     (if (g/contains-point? bounds pos)
-      (assoc state :pos pos))))
+      (ecs/set-entity ecs eid (assoc state :pos pos))
+      (ecs/remove-entity ecs eid))))
 
 (defn spin-entity
-  [{{:keys [speed]} :spin :as state} _]
-  (update-in state [:spin :theta] + speed))
+  [ecs eid {{:keys [speed]} :spin :as state}]
+  (ecs/set-entity
+   ecs eid (update-in state [:spin :theta] + speed)))
 
 (defn hover-entity
-  [{:keys [orig-pos hover hover-speed] :as state} _]
-  (assoc state
-         :pos   (g/+ orig-pos 0 (* (Math/sin hover) 5) 0)
-         :hover (+ hover hover-speed)))
+  [ecs eid {:keys [orig-pos hover hover-speed] :as state}]
+  (ecs/set-entity
+   ecs eid
+   (assoc state
+          :pos   (g/+ orig-pos 0 (* (Math/sin hover) 5) 0)
+          :hover (+ hover hover-speed))))
 
 (defn webgl-render-entity
-  [{:keys [pos render color scale spin] :as state}
-   {ctx :canvas-ctx [w h] :window-size :as db}]
+  [{ctx :canvas-ctx [w h] :window-size :as db}
+   eid {:keys [pos render color scale spin] :as state}]
   (when ctx
     (let [model       (get-in db [:shape-protos render])
           shader-type (db :curr-shader :lambert)
@@ -144,7 +149,7 @@
                       (shader-uniforms shader-type)
                       {:model      model-mat
                        :diffuseCol color})))))
-  state)
+  db)
 
 (def demo-handler
   (reify tick/PTickHandler
