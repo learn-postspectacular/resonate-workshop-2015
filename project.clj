@@ -4,19 +4,19 @@
   :license      {:name "Apache Software License v2.0"
                  :url "https://www.apache.org/licenses/LICENSE-2.0"}
 
-  :dependencies [[org.clojure/clojure "1.7.0-alpha5"]
-                 [org.clojure/clojurescript "0.0-3196"]
-                 [thi.ng/geom "0.0.777-dirty"]
+  :dependencies [[org.clojure/clojure "1.7.0-RC1"]
+                 [org.clojure/clojurescript "0.0-3297"]
+                 [thi.ng/geom "0.0.803"]
                  [thi.ng/domus "0.1.0"]
                  [cljsjs/react "0.12.2-5"]
                  [org.clojars.toxi/re-frame "0.2.0"]
                  [cljs-log "0.2.1"]
                  [reagent "0.5.0"]
-                 [figwheel "0.2.5" :exclusions [org.clojure/clojure]]
+                 [figwheel "0.2.5" :exclusions [org.clojure/clojure org.clojure/clojurescript]]
                  [org.clojure/core.async "0.1.346.0-17112a-alpha"]]
 
   :plugins      [[lein-cljsbuild "1.0.5"]
-                 [lein-figwheel "0.2.5" :exclusions [org.clojure/clojure]]]
+                 [lein-figwheel "0.2.5" :exclusions [org.clojure/clojure org.clojure/clojurescript]]]
 
   :source-paths ["src/clj" "src/cljs"]
 

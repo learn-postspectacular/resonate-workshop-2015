@@ -63,6 +63,10 @@ TBA
 - [Reagent](http://reagent-project.github.io)
 - [Re-frame](https://github.com/Day8/re-frame/)
 
+### Data transformations
+
+- [Rich Hickey's Transducers talk](https://www.youtube.com/watch?v=6mTbuzafcII)
+
 ### Data, data, data (derived views, compute graphs etc.)
 
 - [Turning the DB inside out](https://www.youtube.com/watch?v=fU9hR3kiOK0)

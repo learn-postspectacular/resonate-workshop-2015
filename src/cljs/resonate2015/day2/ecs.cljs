@@ -43,7 +43,7 @@
   "Takes an ECS map, entity ID and an update fn with optional args.
   Applies fn and args via update-in to entity's current state."
   [ecs eid f & args]
-  (-> (apply update-in ecs [:entities eid] f args)))
+  (apply update-in ecs [:entities eid] f args))
 
 (defn register-entity
   "Takes an ECS map and optional map of component states.

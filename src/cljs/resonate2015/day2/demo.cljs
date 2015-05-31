@@ -35,14 +35,14 @@
              :wrap          0}})
 
 (defn box-mesh
-  [] (->> (a/aabb 1) (g/center) (g/faces) (g/into (bm/basic-mesh))))
+  [] (->> (a/aabb 1) (g/center) (g/as-mesh)))
 
 (defn ico-mesh
   [iter] (polyhedra/polyhedron-mesh polyhedra/icosahedron sd/catmull-clark 1 iter))
 
 (defn init-shaders
   [ctx]
-  {:lambert (shaders/make-shader-from-spec ctx lambert/shader-spec)
+  {:lambert (shaders/make-shader-from-spec ctx lambert/shader-spec-two-sided)
    :phong   (shaders/make-shader-from-spec ctx phong/shader-spec)})
 
 (defn webgl-shape-spec
@@ -131,24 +131,23 @@
   [{ctx :canvas-ctx [w h] :window-size :as db}
    eid {:keys [pos render color scale spin] :as state}]
   (when ctx
-    (let [model       (get-in db [:shape-protos render])
+    (let [model       (-> db :shape-protos render)
           shader-type (db :curr-shader :lambert)
+          model-mat   (g/translate M44 pos)
           model-mat   (if spin
-                        (-> M44
-                            (g/translate pos)
+                        (-> model-mat
                             (g/rotate-around-axis (:axis spin) (:theta spin))
                             (g/scale scale))
-                        (-> M44
-                            (g/translate pos)
-                            (g/scale scale)))]
-      (lambert/draw
+                        (g/scale model-mat scale))]
+      (buffers/draw-arrays-with-shader
        ctx
        (-> model
-           (assoc :shader (get-in db [:shaders shader-type]))
+           (assoc :shader (-> db :shaders shader-type))
            (update-in [:uniforms] merge
                       (shader-uniforms shader-type)
                       {:model      model-mat
-                       :diffuseCol color})))))
+                       :diffuseCol color})
+           (shaders/inject-normal-matrix :model :view :normalMat)))))
   db)
 
 (def demo-handler
@@ -157,17 +156,18 @@
       [_ db]
       (-> db
           (merge (ecs/make-ecs))
-          (ecs/register-system :move #{:pos :vel} move-entity)
-          (ecs/register-system :spin #{:spin} spin-entity)
-          (ecs/register-system :hover #{:hover} hover-entity)
-          (ecs/register-system :render #{:render} webgl-render-entity)))
+          (ecs/register-system :move   #{:pos :vel} move-entity)
+          (ecs/register-system :spin   #{:spin}     spin-entity)
+          (ecs/register-system :hover  #{:hover}    hover-entity)
+          (ecs/register-system :render #{:render}   webgl-render-entity)))
     (tick
       [_ {ctx :canvas-ctx [w h] :window-size :as db}]
       (if ctx
         (do
-          (gl/set-viewport ctx 0 0 w h)
-          (gl/clear-color-buffer ctx 0.9 0.9 0.9 1.0)
-          (gl/enable ctx gl/depth-test)
+          (doto ctx
+            (gl/set-viewport 0 0 w h)
+            (gl/clear-color-buffer 0.9 0.9 0.9 1.0)
+            (gl/enable gl/depth-test))
           (reduce
            ecs/run-system
            (update-shape-protos db)
